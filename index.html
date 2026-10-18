@@ -1,0 +1,149 @@
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MiniMatti Liefershop</title>
+<style>
+body {
+  background: #101827;
+  color: white;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  padding: 20px 12px;
+}
+.box {
+  max-width: 520px;
+  margin: 20px auto;
+  padding: 22px;
+  background: #1e293b;
+  border-radius: 18px;
+}
+input, select, button {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  border: none;
+  border-radius: 8px;
+}
+button {
+  background: #f59e0b;
+  font-weight: bold;
+  cursor: pointer;
+}
+#shop { display: none; }
+.price { color: #fbbf24; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<div class="box" id="loginBox">
+  <h1>🔐 MiniMatti Liefershop</h1>
+  <p>Nur für Freunde!</p>
+  <form id="loginForm">
+    <input id="password" type="password"
+      placeholder="Shop-Passwort" required>
+    <button type="submit">Shop öffnen</button>
+  </form>
+  <p id="message"></p>
+</div>
+
+<div class="box" id="shop">
+  <h1>🛒 MiniMatti Liefershop</h1>
+  <p>Dein Minecraft-Shop für Freunde!</p>
+  <hr>
+
+  <h2>🌲 Unsere Waren</h2>
+  <p>Fichtenholz – 2 Diamanten pro Stück</p>
+
+  <h2>📦 Deine Bestellung</h2>
+  <form id="orderForm">
+    <label for="player">Dein Minecraft-Name</label>
+    <input id="player" placeholder="Minecraft-Name" required>
+
+    <label for="item">Ware auswählen</label>
+    <select id="item">
+      <option value="fichtenholz">Fichtenholz</option>
+    </select>
+
+    <label for="amount">Menge</label>
+    <input id="amount" type="number" min="1" max="64"
+      value="6" required>
+
+    <p>Preis pro Stück: 2 Diamanten</p>
+    <p class="price" id="total">Gesamt: 12 Diamanten</p>
+
+    <button type="submit">✅ Bestellung erstellen</button>
+  </form>
+
+  <div id="result" hidden>
+    <h2>🎉 Bestellung erstellt!</h2>
+    <p id="orderText"></p>
+    <button type="button" id="copyButton">
+      📋 Bestellung kopieren
+    </button>
+    <p>Schicke die kopierte Bestellung an MiniMatti über Discord!</p>
+  </div>
+</div>
+
+<script>
+const SHOP_PASSWORT = "Fichte2026!";
+const preisProStueck = 2;
+
+document.getElementById("loginForm").addEventListener("submit", function(e) {
+  e.preventDefault();
+
+  if (document.getElementById("password").value === SHOP_PASSWORT) {
+    document.getElementById("loginBox").style.display = "none";
+    document.getElementById("shop").style.display = "block";
+  } else {
+    document.getElementById("message").textContent =
+      "Falsches Passwort! Versuch es nochmal.";
+  }
+});
+
+const amount = document.getElementById("amount");
+const total = document.getElementById("total");
+
+function updatePrice() {
+  let menge = Number(amount.value);
+  if (!Number.isFinite(menge) || menge < 1) menge = 1;
+  total.textContent = "Gesamt: " + (menge * preisProStueck) + " Diamanten";
+}
+
+amount.addEventListener("input", updatePrice);
+
+document.getElementById("orderForm").addEventListener("submit", function(e) {
+  e.preventDefault();
+
+  const name = document.getElementById("player").value.trim();
+  const menge = Number(amount.value);
+
+  if (!name || !Number.isInteger(menge) || menge < 1 || menge > 64) {
+    alert("Bitte gib einen Namen und eine Menge von 1 bis 64 ein.");
+    return;
+  }
+
+  const bestellung =
+    "🛒 MiniMatti Liefershop\n" +
+    "Minecraft-Name: " + name + "\n" +
+    "Ware: Fichtenholz x " + menge + "\n" +
+    "Gesamtpreis: " + (menge * preisProStueck) + " Diamanten";
+
+  document.getElementById("orderText").textContent = bestellung;
+  document.getElementById("result").hidden = false;
+  document.getElementById("copyButton").onclick = async function() {
+    try {
+      await navigator.clipboard.writeText(bestellung);
+      this.textContent = "✅ Kopiert!";
+    } catch {
+      prompt("Kopiere deine Bestellung:", bestellung);
+    }
+  };
+});
+</script>
+
+</body>
+</html>
