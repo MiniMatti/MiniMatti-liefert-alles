@@ -6,144 +6,463 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MiniMatti Liefershop</title>
 <style>
+:root {
+  --bg: #0b1120;
+  --panel: #172338;
+  --panel2: #22324b;
+  --gold: #fbbf24;
+  --text: #f8fafc;
+  --muted: #b7c5d9;
+}
+* { box-sizing: border-box; }
 body {
-  background: #101827;
-  color: white;
+  margin: 0;
+  padding: 20px 14px 40px;
+  background: var(--bg);
+  color: var(--text);
   font-family: Arial, sans-serif;
+}
+header {
   text-align: center;
-  padding: 20px 12px;
+  padding: 25px 10px;
 }
-.box {
-  max-width: 520px;
-  margin: 20px auto;
-  padding: 22px;
-  background: #1e293b;
+header h1 {
+  color: var(--gold);
+  font-size: clamp(27px, 6vw, 42px);
+  margin: 5px 0;
+}
+header p { color: var(--muted); }
+.container { max-width: 1000px; margin: auto; }
+.panel {
+  background: var(--panel);
+  border: 1px solid #30425d;
   border-radius: 18px;
+  padding: 20px;
+  margin-bottom: 20px;
 }
-input, select, button {
-  box-sizing: border-box;
-  width: 100%;
-  padding: 12px;
-  margin: 8px 0;
-  border: none;
-  border-radius: 8px;
+h2 { margin-top: 0; }
+.categories {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+  gap: 10px;
 }
-button {
-  background: #f59e0b;
+.category {
+  min-height: 76px;
+  background: var(--panel2);
+  color: white;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  padding: 12px 6px;
+  font-size: 15px;
   font-weight: bold;
   cursor: pointer;
 }
-#shop { display: none; }
-.price { color: #fbbf24; font-weight: bold; }
+.category.active {
+  border-color: var(--gold);
+  background: #34435a;
+}
+.products {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+}
+.product {
+  background: var(--panel2);
+  padding: 16px;
+  border-radius: 13px;
+}
+.product h3 { margin: 0 0 8px; }
+.price { color: var(--gold); font-weight: bold; }
+label {
+  display: block;
+  margin: 14px 0 6px;
+  color: var(--muted);
+}
+input, select, textarea {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  border-radius: 9px;
+  border: 1px solid #475569;
+  background: #0f172a;
+  color: white;
+  font-size: 16px;
+}
+button { font-family: inherit; }
+.add, .main-button, .copy-button {
+  background: var(--gold);
+  color: #111827;
+  border: 0;
+  border-radius: 9px;
+  padding: 12px 15px;
+  font-weight: bold;
+  cursor: pointer;
+}
+.add { width: 100%; margin-top: 12px; }
+.main-button, .copy-button { width: 100%; margin-top: 12px; }
+.add:hover, .main-button:hover, .copy-button:hover {
+  filter: brightness(1.08);
+}
+.cart-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid #30425d;
+}
+.remove {
+  background: #7f1d1d;
+  color: white;
+  border: 0;
+  border-radius: 7px;
+  padding: 7px 10px;
+  cursor: pointer;
+}
+.total {
+  color: var(--gold);
+  font-size: 24px;
+  font-weight: bold;
+  margin-top: 18px;
+}
+.small { color: var(--muted); font-size: 13px; line-height: 1.5; }
+#notice { margin-top: 12px; }
+@media (max-width: 450px) {
+  body { padding: 10px 8px 30px; }
+  .panel { padding: 14px; }
+}
 </style>
 </head>
 <body>
+<div class="container">
 
-<div class="box" id="loginBox">
-  <h1>🔐 MiniMatti Liefershop</h1>
-  <p>Nur für Freunde!</p>
-  <form id="loginForm">
-    <input id="password" type="password"
-      placeholder="Shop-Passwort" required>
-    <button type="submit">Shop öffnen</button>
-  </form>
-  <p id="message"></p>
-</div>
-
-<div class="box" id="shop">
+<header>
   <h1>🛒 MiniMatti Liefershop</h1>
-  <p>Dein Minecraft-Shop für Freunde!</p>
-  <hr>
+  <p>Dein Minecraft-Shop – einfach auswählen und bestellen!</p>
+</header>
 
-  <h2>🌲 Unsere Waren</h2>
-  <p>Fichtenholz – 2 Diamanten pro Stück</p>
+<section class="panel">
+  <h2>📦 1. Kategorie auswählen</h2>
+  <div class="categories" id="categories"></div>
+</section>
 
-  <h2>📦 Deine Bestellung</h2>
+<section class="panel">
+  <h2 id="productHeading">🛍️ 2. Waren auswählen</h2>
+  <div class="products" id="products"></div>
+</section>
+
+<section class="panel">
+  <h2>💎 3. Dein Warenkorb</h2>
+  <div id="cart"><p class="small">Dein Warenkorb ist noch leer.</p></div>
+  <div class="total" id="total">Gesamt: 0 Diamanten</div>
+  <button class="main-button" id="clearCart" type="button">
+    🗑️ Warenkorb leeren
+  </button>
+</section>
+
+<section class="panel">
+  <h2>📝 4. Bestellung abschicken</h2>
   <form id="orderForm">
     <label for="player">Dein Minecraft-Name</label>
-    <input id="player" placeholder="Minecraft-Name" required>
+    <input id="player" maxlength="40" required
+      placeholder="Dein Spielername">
 
-    <label for="item">Ware auswählen</label>
-    <select id="item">
-      <option value="fichtenholz">Fichtenholz</option>
-    </select>
+    <label for="contact">Dein Discord-Name (optional)</label>
+    <input id="contact" maxlength="60"
+      placeholder="Dein Discord-Name">
 
-    <label for="amount">Menge</label>
-    <input id="amount" type="number" min="1" max="64"
-      value="6" required>
+    <label for="notes">Anmerkungen (optional)</label>
+    <textarea id="notes" maxlength="300" rows="3"
+      placeholder="Zum Beispiel: Lieferung am Abend"></textarea>
 
-    <p>Preis pro Stück: 2 Diamanten</p>
-    <p class="price" id="total">Gesamt: 12 Diamanten</p>
-
-    <button type="submit">✅ Bestellung erstellen</button>
+    <button class="main-button" type="submit">
+      ✅ Bestellung erstellen
+    </button>
   </form>
 
   <div id="result" hidden>
-    <h2>🎉 Bestellung erstellt!</h2>
-    <p id="orderText"></p>
-    <button type="button" id="copyButton">
+    <h2>🎉 Deine Bestellung</h2>
+    <textarea id="orderText" rows="10" readonly></textarea>
+    <button class="copy-button" id="copyButton" type="button">
       📋 Bestellung kopieren
     </button>
-    <p>Schicke die kopierte Bestellung an MiniMatti über Discord!</p>
+    <p class="small">
+      Schicke die kopierte Bestellung anschließend über Discord
+      an MiniMatti. Die Bestellung wird nicht automatisch versendet.
+    </p>
   </div>
+  <p id="notice" role="status"></p>
+</section>
+
+<footer class="small" style="text-align:center">
+  MiniMatti Liefershop · Minecraft-Fanprojekt
+</footer>
 </div>
 
 <script>
-const SHOP_PASSWORT = "Fichte2026!";
-const preisProStueck = 2;
+const categories = [
+  { id: "ores", name: "💎 Erze" },
+  { id: "stone", name: "🪨 Stein" },
+  { id: "wood", name: "🌲 Holz" },
+  { id: "food", name: "🥕 Nahrung" },
+  { id: "plants", name: "🌱 Pflanzen" },
+  { id: "redstone", name: "⚙️ Redstone" },
+  { id: "building", name: "🏗️ Baublöcke" },
+  { id: "other", name: "📦 Sonstiges" }
+];
 
-document.getElementById("loginForm").addEventListener("submit", function(e) {
-  e.preventDefault();
+// Beispielpreise in Diamanten pro Stück.
+// Passe diese Preise später an deinen Server an.
+const products = [
+  { id:"diamond", name:"Diamant", category:"ores", price:4 },
+  { id:"iron", name:"Eisenbarren", category:"ores", price:1 },
+  { id:"gold", name:"Goldbarren", category:"ores", price:1 },
+  { id:"coal", name:"Kohle", category:"ores", price:1 },
+  { id:"emerald", name:"Smaragd", category:"ores", price:2 },
+  { id:"copper", name:"Kupferbarren", category:"ores", price:1 },
 
-  if (document.getElementById("password").value === SHOP_PASSWORT) {
-    document.getElementById("loginBox").style.display = "none";
-    document.getElementById("shop").style.display = "block";
-  } else {
-    document.getElementById("message").textContent =
-      "Falsches Passwort! Versuch es nochmal.";
-  }
-});
+  { id:"stone", name:"Stein", category:"stone", price:1 },
+  { id:"cobble", name:"Bruchstein", category:"stone", price:1 },
+  { id:"deepslate", name:"Tiefenschiefer", category:"stone", price:1 },
+  { id:"glass", name:"Glas", category:"stone", price:1 },
+  { id:"sand", name:"Sand", category:"stone", price:1 },
+  { id:"gravel", name:"Kies", category:"stone", price:1 },
 
-const amount = document.getElementById("amount");
-const total = document.getElementById("total");
+  { id:"spruce", name:"Fichtenholz", category:"wood", price:2 },
+  { id:"oak", name:"Eichenholz", category:"wood", price:2 },
+  { id:"birch", name:"Birkenholz", category:"wood", price:2 },
+  { id:"darkoak", name:"Schwarzeichenholz", category:"wood", price:2 },
+  { id:"jungle", name:"Tropenholz", category:"wood", price:2 },
+  { id:"mangrove", name:"Mangrovenholz", category:"wood", price:2 },
 
-function updatePrice() {
-  let menge = Number(amount.value);
-  if (!Number.isFinite(menge) || menge < 1) menge = 1;
-  total.textContent = "Gesamt: " + (menge * preisProStueck) + " Diamanten";
+  { id:"carrot", name:"Karotte", category:"food", price:1 },
+  { id:"potato", name:"Kartoffel", category:"food", price:1 },
+  { id:"bread", name:"Brot", category:"food", price:1 },
+  { id:"beef", name:"Rohes Rindfleisch", category:"food", price:1 },
+  { id:"cookedbeef", name:"Gebratenes Rindfleisch", category:"food", price:2 },
+  { id:"apple", name:"Apfel", category:"food", price:1 },
+
+  { id:"wheat", name:"Weizen", category:"plants", price:1 },
+  { id:"sugarcane", name:"Zuckerrohr", category:"plants", price:1 },
+  { id:"cactus", name:"Kaktus", category:"plants", price:1 },
+  { id:"bamboo", name:"Bambus", category:"plants", price:1 },
+  { id:"sapling", name:"Fichtensetzling", category:"plants", price:2 },
+  { id:"pumpkin", name:"Kürbis", category:"plants", price:1 },
+
+  { id:"dust", name:"Redstone-Staub", category:"redstone", price:1 },
+  { id:"repeater", name:"Redstone-Verstärker", category:"redstone", price:3 },
+  { id:"comparator", name:"Redstone-Komparator", category:"redstone", price:3 },
+  { id:"piston", name:"Kolben", category:"redstone", price:3 },
+  { id:"observer", name:"Beobachter", category:"redstone", price:4 },
+  { id:"hopper", name:"Trichter", category:"redstone", price:4 },
+
+  { id:"bricks", name:"Steinziegel", category:"building", price:2 },
+  { id:"deepslatebricks", name:"Tiefenschieferziegel", category:"building", price:2 },
+  { id:"quartz", name:"Quarzblock", category:"building", price:3 },
+  { id:"terracotta", name:"Terrakotta", category:"building", price:2 },
+  { id:"concrete", name:"Beton", category:"building", price:2 },
+  { id:"lantern", name:"Laterne", category:"building", price:3 },
+
+  { id:"torch", name:"Fackel", category:"other", price:1 },
+  { id:"chest", name:"Truhe", category:"other", price:2 },
+  { id:"ladder", name:"Leiter", category:"other", price:1 },
+  { id:"bucket", name:"Eimer", category:"other", price:4 },
+  { id:"lead", name:"Leine", category:"other", price:2 },
+  { id:"name_tag", name:"Namensschild", category:"other", price:5 }
+];
+
+let activeCategory = "ores";
+const cart = new Map();
+
+const categoriesEl = document.getElementById("categories");
+const productsEl = document.getElementById("products");
+const cartEl = document.getElementById("cart");
+const totalEl = document.getElementById("total");
+const noticeEl = document.getElementById("notice");
+
+function makeButton(text, className, action) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = className;
+  button.textContent = text;
+  button.addEventListener("click", action);
+  return button;
 }
 
-amount.addEventListener("input", updatePrice);
+function renderCategories() {
+  categoriesEl.replaceChildren();
 
-document.getElementById("orderForm").addEventListener("submit", function(e) {
-  e.preventDefault();
+  categories.forEach(category => {
+    const button = makeButton(
+      category.name,
+      "category" + (activeCategory === category.id ? " active" : ""),
+      () => {
+        activeCategory = category.id;
+        renderCategories();
+        renderProducts();
+      }
+    );
+    categoriesEl.appendChild(button);
+  });
+}
 
-  const name = document.getElementById("player").value.trim();
-  const menge = Number(amount.value);
+function renderProducts() {
+  const category = categories.find(c => c.id === activeCategory);
+  document.getElementById("productHeading").textContent =
+    category.name + " – Waren auswählen";
+  productsEl.replaceChildren();
 
-  if (!name || !Number.isInteger(menge) || menge < 1 || menge > 64) {
-    alert("Bitte gib einen Namen und eine Menge von 1 bis 64 ein.");
+  products.filter(p => p.category === activeCategory).forEach(product => {
+    const card = document.createElement("div");
+    card.className = "product";
+
+    const title = document.createElement("h3");
+    title.textContent = product.name;
+
+    const price = document.createElement("p");
+    price.className = "price";
+    price.textContent = product.price + " Diamant(en) pro Stück";
+
+    const quantityLabel = document.createElement("label");
+    quantityLabel.textContent = "Menge (1–64)";
+
+    const quantity = document.createElement("input");
+    quantity.type = "number";
+    quantity.min = "1";
+    quantity.max = "64";
+    quantity.step = "1";
+    quantity.value = cart.get(product.id)?.quantity || 1;
+    quantity.setAttribute("aria-label", "Menge für " + product.name);
+
+    const add = makeButton("➕ In den Warenkorb", "add", () => {
+      const amount = Number(quantity.value);
+      if (!Number.isInteger(amount) || amount < 1 || amount > 64) {
+        noticeEl.textContent = "Bitte wähle eine Menge zwischen 1 und 64.";
+        return;
+      }
+
+      const existing = cart.get(product.id)?.quantity || 0;
+      if (existing + amount > 64) {
+        noticeEl.textContent = "Maximal 64 Stück pro Ware im Warenkorb.";
+        return;
+      }
+
+      cart.set(product.id, { product, quantity: existing + amount });
+      noticeEl.textContent = product.name + " wurde hinzugefügt!";
+      renderCart();
+    });
+
+    card.append(title, price, quantityLabel, quantity, add);
+    productsEl.appendChild(card);
+  });
+}
+
+function renderCart() {
+  cartEl.replaceChildren();
+
+  if (cart.size === 0) {
+    const empty = document.createElement("p");
+    empty.className = "small";
+    empty.textContent = "Dein Warenkorb ist noch leer.";
+    cartEl.appendChild(empty);
+  }
+
+  let total = 0;
+
+  cart.forEach((entry, id) => {
+    const line = document.createElement("div");
+    line.className = "cart-line";
+
+    const description = document.createElement("span");
+    const subtotal = entry.product.price * entry.quantity;
+    total += subtotal;
+    description.textContent =
+      entry.product.name + " × " + entry.quantity +
+      " = " + subtotal + " Diamanten";
+
+    const remove = makeButton("Entfernen", "remove", () => {
+      cart.delete(id);
+      renderCart();
+    });
+
+    line.append(description, remove);
+    cartEl.appendChild(line);
+  });
+
+  totalEl.textContent = "Gesamt: " + total + " Diamanten";
+}
+
+document.getElementById("clearCart").addEventListener("click", () => {
+  cart.clear();
+  renderCart();
+  noticeEl.textContent = "Warenkorb geleert.";
+});
+
+document.getElementById("orderForm").addEventListener("submit", event => {
+  event.preventDefault();
+
+  if (cart.size === 0) {
+    noticeEl.textContent = "Bitte lege zuerst mindestens eine Ware in den Warenkorb.";
     return;
   }
 
-  const bestellung =
-    "🛒 MiniMatti Liefershop\n" +
-    "Minecraft-Name: " + name + "\n" +
-    "Ware: Fichtenholz x " + menge + "\n" +
-    "Gesamtpreis: " + (menge * preisProStueck) + " Diamanten";
+  const player = document.getElementById("player").value.trim();
+  const contact = document.getElementById("contact").value.trim();
+  const notes = document.getElementById("notes").value.trim();
 
-  document.getElementById("orderText").textContent = bestellung;
+  if (!player) {
+    noticeEl.textContent = "Bitte gib deinen Minecraft-Namen ein.";
+    return;
+  }
+
+  let total = 0;
+  const lines = [
+    "🛒 MINIMATTI LIEFERSHOP",
+    "Minecraft-Name: " + player
+  ];
+
+  if (contact) lines.push("Discord: " + contact);
+
+  lines.push("", "BESTELLUNG:");
+
+  cart.forEach(entry => {
+    const subtotal = entry.product.price * entry.quantity;
+    total += subtotal;
+    lines.push(
+      "- " + entry.product.name + " × " + entry.quantity +
+      " = " + subtotal + " Diamanten"
+    );
+  });
+
+  lines.push("", "GESAMTPREIS: " + total + " Diamanten");
+
+  if (notes) lines.push("Anmerkungen: " + notes);
+
+  lines.push("", "Bitte Bestellung mit MiniMatti bestätigen.");
+
+  document.getElementById("orderText").value = lines.join("\n");
   document.getElementById("result").hidden = false;
-  document.getElementById("copyButton").onclick = async function() {
-    try {
-      await navigator.clipboard.writeText(bestellung);
-      this.textContent = "✅ Kopiert!";
-    } catch {
-      prompt("Kopiere deine Bestellung:", bestellung);
-    }
-  };
+  noticeEl.textContent = "Bestellung wurde erstellt! Kopiere sie für Discord.";
+  document.getElementById("result").scrollIntoView({ behavior: "smooth" });
 });
-</script>
 
+document.getElementById("copyButton").addEventListener("click", async () => {
+  const text = document.getElementById("orderText").value;
+  try {
+    await navigator.clipboard.writeText(text);
+    document.getElementById("copyButton").textContent = "✅ Kopiert!";
+  } catch {
+    document.getElementById("orderText").focus();
+    document.getElementById("orderText").select();
+    noticeEl.textContent = "Drücke Strg+C, um die Bestellung zu kopieren.";
+  }
+});
+
+renderCategories();
+renderProducts();
+renderCart();
+</script>
 </body>
 </html>
+
+
